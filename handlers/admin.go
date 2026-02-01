@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"context"
+
+	"github.com/OkanUysal/go-logger"
 	"github.com/OkanUysal/go-response"
 	"github.com/OkanUysal/go-starter-example-project/auth"
 	"github.com/OkanUysal/go-starter-example-project/config"
@@ -23,30 +26,43 @@ func AdminDashboard(c *gin.Context) {
 	userID, _ := auth.GetUserID(c)
 	role, _ := auth.GetRole(c)
 
-	db := config.GetDB()
+	cache := config.GetCache()
+	ctx := context.Background()
+	cacheKey := "admin:dashboard:stats"
 
-	// Get total user count
-	var totalUsers int64
-	db.Model(&models.User{}).Count(&totalUsers)
+	// Define stats structure
+	type DashboardStats struct {
+		TotalUsers int64 `json:"total_users"`
+		AdminCount int64 `json:"admin_count"`
+		GuestCount int64 `json:"guest_count"`
+	}
 
-	// Get admin count
-	var adminCount int64
-	db.Model(&models.User{}).Where("role = ?", models.RoleAdmin).Count(&adminCount)
+	var stats DashboardStats
 
-	// Get guest count
-	var guestCount int64
-	db.Model(&models.User{}).Where("is_guest = ?", true).Count(&guestCount)
+	// Try to get from cache first
+	if err := cache.GetJSON(ctx, cacheKey, &stats); err != nil {
+		// Cache miss - get from database
+		config.Logger.Info("Cache miss: admin dashboard stats")
+		db := config.GetDB()
+		db.Model(&models.User{}).Count(&stats.TotalUsers)
+		db.Model(&models.User{}).Where("role = ?", models.RoleAdmin).Count(&stats.AdminCount)
+		db.Model(&models.User{}).Where("is_guest = ?", true).Count(&stats.GuestCount)
+
+		// Cache for default TTL (5 minutes)
+		cache.SetJSON(ctx, cacheKey, stats)
+	} else {
+		config.Logger.Info("Cache hit: admin dashboard stats",
+			logger.Int64("total_users", stats.TotalUsers),
+			logger.Int64("admin_count", stats.AdminCount),
+			logger.Int64("guest_count", stats.GuestCount))
+	}
 
 	response.Success(c, gin.H{
 		"admin": gin.H{
 			"user_id": userID,
 			"role":    role,
 		},
-		"statistics": gin.H{
-			"total_users": totalUsers,
-			"admin_count": adminCount,
-			"guest_count": guestCount,
-		},
+		"statistics": stats,
 	}, "Admin dashboard data")
 }
 

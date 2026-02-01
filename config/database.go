@@ -5,17 +5,22 @@ import (
 	"log"
 	"os"
 
+	"github.com/OkanUysal/go-logger"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	gormlogger "gorm.io/gorm/logger"
 )
 
-var DB *gorm.DB
+var (
+	DB     *gorm.DB
+	Logger *logger.Logger
+)
 
 // LoadEnv loads environment variables from .env file
 func LoadEnv() {
 	if err := godotenv.Load(); err != nil {
+		// Use standard log here as Logger is not yet initialized
 		log.Println("No .env file found, using environment variables")
 	}
 }
@@ -31,13 +36,13 @@ func ConnectDatabase() error {
 	// Connect to database
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: gormlogger.Default.LogMode(gormlogger.Info),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	log.Println("Database connection established successfully")
+	Logger.Info("Database connection established successfully")
 	return nil
 }
 

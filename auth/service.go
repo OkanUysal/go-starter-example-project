@@ -1,9 +1,11 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 
+	"github.com/OkanUysal/go-logger"
 	"github.com/OkanUysal/go-starter-example-project/config"
 	"github.com/OkanUysal/go-starter-example-project/models"
 	"github.com/google/uuid"
@@ -135,12 +137,29 @@ func (s *Service) RefreshToken(token string) (*GuestLoginResponse, error) {
 	}, nil
 }
 
-// GetUserByID returns a user by ID
+// GetUserByID returns a user by ID with caching
 func (s *Service) GetUserByID(userID string) (*models.User, error) {
-	db := config.GetDB()
+	cache := config.GetCache()
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf("user:%s", userID)
+
+	// Try to get from cache first
 	var user models.User
+	if err := cache.GetJSON(ctx, cacheKey, &user); err == nil {
+		config.Logger.Info("Cache hit: user data", logger.String("user_id", userID))
+		return &user, nil
+	}
+
+	config.Logger.Info("Cache miss: user data", logger.String("user_id", userID))
+
+	// Get from database if not in cache
+	db := config.GetDB()
 	if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
+
+	// Cache the user (uses default TTL: 5 minutes)
+	cache.SetJSON(ctx, cacheKey, user)
+
 	return &user, nil
 }

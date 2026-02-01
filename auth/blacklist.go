@@ -1,8 +1,11 @@
 package auth
 
 import (
+	"context"
+	"fmt"
 	"time"
 
+	"github.com/OkanUysal/go-logger"
 	"github.com/OkanUysal/go-starter-example-project/config"
 	"github.com/OkanUysal/go-starter-example-project/models"
 )
@@ -23,6 +26,8 @@ func BlacklistToken(jti, userID string, expiresAt time.Time) error {
 // BlacklistByFamilyID blacklists all tokens in a family
 func BlacklistByFamilyID(familyID, userID string, expiresAt time.Time) error {
 	db := config.GetDB()
+	cache := config.GetCache()
+	ctx := context.Background()
 
 	blacklist := models.TokenBlacklist{
 		JTI:       familyID, // Using family ID as JTI for family-based blacklist
@@ -30,6 +35,9 @@ func BlacklistByFamilyID(familyID, userID string, expiresAt time.Time) error {
 		FamilyID:  &familyID,
 		ExpiresAt: expiresAt,
 	}
+
+	// Invalidate cache
+	cache.Delete(ctx, fmt.Sprintf("blacklist:family:%s", familyID))
 
 	return db.Create(&blacklist).Error
 }
@@ -56,22 +64,58 @@ func BlacklistTokenPair(accessJTI, refreshJTI, userID string, accessExpiresAt, r
 
 // IsTokenBlacklisted checks if a token is blacklisted (by JTI or family ID)
 func IsTokenBlacklisted(jti string) bool {
-	db := config.GetDB()
+	cache := config.GetCache()
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf("blacklist:jti:%s", jti)
 
+	// Check cache first
+	var cached bool
+	if err := cache.GetJSON(ctx, cacheKey, &cached); err == nil {
+		config.Logger.Info("Cache hit: token blacklist check", logger.String("jti", jti), logger.Bool("is_blacklisted", cached))
+		return cached
+	}
+
+	config.Logger.Info("Cache miss: token blacklist check", logger.String("jti", jti))
+
+	// Check database
+	db := config.GetDB()
 	var count int64
 	db.Model(&models.TokenBlacklist{}).Where("jti = ?", jti).Count(&count)
 
-	return count > 0
+	isBlacklisted := count > 0
+
+	// Cache the result (uses default TTL: 5 minutes)
+	cache.SetJSON(ctx, cacheKey, isBlacklisted)
+
+	return isBlacklisted
 }
 
 // IsTokenFamilyBlacklisted checks if a token's family is blacklisted
 func IsTokenFamilyBlacklisted(familyID string) bool {
-	db := config.GetDB()
+	cache := config.GetCache()
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf("blacklist:family:%s", familyID)
 
+	// Check cache first
+	var cached bool
+	if err := cache.GetJSON(ctx, cacheKey, &cached); err == nil {
+		config.Logger.Info("Cache hit: token family blacklist check", logger.String("family_id", familyID), logger.Bool("is_blacklisted", cached))
+		return cached
+	}
+
+	config.Logger.Info("Cache miss: token family blacklist check", logger.String("family_id", familyID))
+
+	// Check database
+	db := config.GetDB()
 	var count int64
 	db.Model(&models.TokenBlacklist{}).Where("family_id = ?", familyID).Count(&count)
 
-	return count > 0
+	isBlacklisted := count > 0
+
+	// Cache the result (uses default TTL: 5 minutes)
+	cache.SetJSON(ctx, cacheKey, isBlacklisted)
+
+	return isBlacklisted
 } // CleanupExpiredTokens removes expired tokens from blacklist
 func CleanupExpiredTokens() error {
 	db := config.GetDB()

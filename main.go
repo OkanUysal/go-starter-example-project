@@ -46,6 +46,7 @@ func main() {
 		TimeFormat: "2006-01-02 15:04:05",
 	}
 	log := logger.New(loggerConfig)
+	config.Logger = log // Set global logger for other packages
 
 	// Connect to database
 	if err := config.ConnectDatabase(); err != nil {
@@ -53,6 +54,13 @@ func main() {
 		return
 	}
 	log.Info("Database connected successfully")
+
+	// Initialize cache
+	if err := config.InitCache(); err != nil {
+		log.Error("Failed to initialize cache", logger.Err(err))
+		return
+	}
+	log.Info("Cache initialized successfully")
 
 	// Initialize auth service
 	if err := handlers.InitAuthService(); err != nil {
