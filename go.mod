@@ -5,8 +5,10 @@ go 1.24.9
 toolchain go1.24.12
 
 require (
+	github.com/OkanUysal/go-cache v1.0.2
 	github.com/OkanUysal/go-logger v1.0.1
 	github.com/OkanUysal/go-metrics v1.3.0
+	github.com/OkanUysal/go-response v1.0.0
 	github.com/OkanUysal/go-swagger v1.1.4
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
@@ -19,8 +21,6 @@ require (
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/OkanUysal/go-cache v1.0.2 // indirect
-	github.com/OkanUysal/go-response v1.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.14.0 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect
