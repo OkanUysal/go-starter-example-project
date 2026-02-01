@@ -10,21 +10,28 @@ import (
 // Middleware validates JWT tokens and sets user info in context
 func Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Try to get token from Authorization header first
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			response.Unauthorized(c, "Authorization header required")
-			c.Abort()
-			return
+		var tokenString string
+
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) != 2 || parts[0] != "Bearer" {
+				response.Unauthorized(c, "Invalid authorization header format")
+				c.Abort()
+				return
+			}
+			tokenString = parts[1]
+		} else {
+			// For WebSocket connections, allow token from query parameter
+			tokenString = c.Query("token")
+			if tokenString == "" {
+				response.Unauthorized(c, "Authorization required")
+				c.Abort()
+				return
+			}
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			response.Unauthorized(c, "Invalid authorization header format")
-			c.Abort()
-			return
-		}
-
-		tokenString := parts[1]
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
 			response.Unauthorized(c, "Invalid or expired token")

@@ -55,6 +55,27 @@ definitions:
     x-enum-varnames:
     - RoleUser
     - RoleAdmin
+  websocket.CreateRoomRequest:
+    properties:
+      max_players:
+        type: integer
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  websocket.InviteRequest:
+    properties:
+      room_id:
+        type: string
+      user_ids:
+        items:
+          type: string
+        type: array
+    required:
+    - room_id
+    - user_ids
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -230,6 +251,223 @@ paths:
       summary: Hello endpoint
       tags:
       - general
+  /ws:
+    get:
+      description: Establish WebSocket connection for real-time communication
+      parameters:
+      - description: Room ID to join (use 'lobby' for public lobby)
+        in: query
+        name: room_id
+        required: true
+        type: string
+      responses:
+        "101":
+          description: Switching Protocols
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Room not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Connect to WebSocket
+      tags:
+      - websocket
+  /ws/invite:
+    post:
+      consumes:
+      - application/json
+      description: Invite specific users to a game room (admin only)
+      parameters:
+      - description: Invitation details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/websocket.InviteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invitations sent successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Admin access required
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Room not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Invite users to room
+      tags:
+      - websocket
+  /ws/rooms:
+    get:
+      description: Get list of all active WebSocket rooms
+      responses:
+        "200":
+          description: List of rooms
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all rooms
+      tags:
+      - websocket
+    post:
+      consumes:
+      - application/json
+      description: Create a new game room (admin only)
+      parameters:
+      - description: Room details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/websocket.CreateRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Room created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Admin access required
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create game room
+      tags:
+      - websocket
+  /ws/rooms/{room_id}:
+    delete:
+      description: Close an existing game room (admin only)
+      parameters:
+      - description: Room ID
+        in: path
+        name: room_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Room closed successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Cannot close lobby
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Admin access required
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Room not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Close game room
+      tags:
+      - websocket
+    get:
+      description: Get detailed information about a specific room
+      parameters:
+      - description: Room ID
+        in: path
+        name: room_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Room information
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Room not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get room information
+      tags:
+      - websocket
 schemes:
 - http
 - https

@@ -1,6 +1,6 @@
 # Go Starter Example Project
 
-A production-ready Go REST API starter template with authentication, authorization, metrics, and comprehensive developer tooling.
+A production-ready Go REST API starter template with authentication, authorization, real-time WebSocket communication, caching, metrics, and comprehensive developer tooling.
 
 ## ✨ Features
 
@@ -11,6 +11,19 @@ A production-ready Go REST API starter template with authentication, authorizati
 - 🛡️ **Role-Based Access** - Admin middleware and user roles
 - 🔄 **Token Refresh** - Secure token rotation with automatic blacklisting
 
+### Real-Time Communication
+- 🌐 **WebSocket Support** - Real-time bidirectional communication
+- 🏠 **Public Lobby** - Always-open room for all users
+- 🎮 **Dynamic Game Rooms** - Admin-created rooms with player limits
+- 👥 **Room Management** - Join, leave, invite, and broadcast messages
+- 📨 **Message Types** - Chat, game events, room notifications
+
+### Performance & Caching
+- ⚡ **Multi-Backend Cache** - Memory and Redis support
+- 🚀 **Smart Caching** - Token blacklist, user data, and statistics
+- 📊 **Cache Hit/Miss Logging** - Performance monitoring
+- ⏱️ **Configurable TTL** - Environment-based cache duration
+
 ### API & Documentation
 - 📚 **Swagger/OpenAPI** - Auto-generated interactive API docs
 - ✅ **Standardized Responses** - Consistent API response format
@@ -20,6 +33,7 @@ A production-ready Go REST API starter template with authentication, authorizati
 - 📊 **Prometheus Metrics** - HTTP metrics with automatic collection
 - ☁️ **Grafana Cloud** - Optional metrics push integration
 - 🏥 **Health Checks** - `/health` and `/metrics` endpoints
+- 📝 **Structured Logging** - JSON logs with go-logger
 
 ### Database
 - 🗄️ **PostgreSQL + GORM** - Production-ready ORM
@@ -91,6 +105,16 @@ Once the server is running, visit:
 - `GET /api/admin/dashboard` - Admin dashboard with statistics
 - `GET /api/admin/users` - List all users
 
+#### WebSocket Endpoints (Requires Authentication)
+- `GET /api/ws?room_id=lobby` - Connect to WebSocket (room_id optional, defaults to lobby)
+- `GET /api/ws/rooms` - Get all active rooms
+- `GET /api/ws/rooms/:room_id` - Get room information
+
+#### WebSocket Admin Endpoints (Requires Admin Role)
+- `POST /api/ws/rooms` - Create a new game room
+- `DELETE /api/ws/rooms/:room_id` - Close a game room
+- `POST /api/ws/invite` - Invite users to a room
+
 #### Monitoring
 - `GET /health` - Health check
 - `GET /metrics` - Prometheus metrics
@@ -159,6 +183,11 @@ REFRESH_TOKEN_DURATION=168  # hours (7 days)
 USER_TABLE=example_user
 TOKEN_BLACKLIST_TABLE=example_token_blacklist
 
+# Cache Configuration
+CACHE_TYPE=memory           # or "redis"
+CACHE_TTL=300              # seconds (5 minutes)
+REDIS_URL=                 # redis://localhost:6379 (if using Redis)
+
 # Metrics
 SERVICE_NAME=go-starter-example-project
 METRICS_ENABLED=true
@@ -168,6 +197,122 @@ GRAFANA_CLOUD_URL=https://prometheus-prod-XX-prod-XX.grafana.net/api/prom/push
 GRAFANA_CLOUD_USER=123456
 GRAFANA_CLOUD_KEY=glc_xxxxx
 ```
+
+## 🌐 WebSocket Usage
+
+### Connect to WebSocket
+
+```javascript
+// Connect to public lobby
+const ws = new WebSocket('ws://localhost:8080/api/ws?room_id=lobby', {
+  headers: {
+    'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+  }
+});
+
+// Or connect to a specific game room
+const ws = new WebSocket('ws://localhost:8080/api/ws?room_id=ROOM_ID', {
+  headers: {
+    'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+  }
+});
+
+ws.onopen = () => {
+  console.log('Connected to WebSocket');
+};
+
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  console.log('Received:', message);
+  
+  // Handle different message types
+  switch(message.type) {
+    case 'join':
+      console.log(`${message.data.username} joined`);
+      break;
+    case 'leave':
+      console.log(`${message.data.username} left`);
+      break;
+    case 'chat':
+      console.log(`${message.data.username}: ${message.data.content}`);
+      break;
+    case 'invite':
+      console.log('You have been invited to:', message.data.room);
+      break;
+    case 'room_created':
+      console.log('New room created:', message.data.room);
+      break;
+    case 'room_closed':
+      console.log('Room closed:', message.data.room_id);
+      break;
+  }
+};
+```
+
+### Admin: Create a Game Room
+
+```bash
+curl -X POST http://localhost:8080/api/ws/rooms \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Game Room 1",
+    "max_players": 4
+  }'
+```
+
+### Admin: Invite Users to Room
+
+```bash
+curl -X POST http://localhost:8080/api/ws/invite \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "room_id": "ROOM_ID",
+    "user_ids": ["user-id-1", "user-id-2"]
+  }'
+```
+
+### Admin: Close a Game Room
+
+```bash
+curl -X DELETE http://localhost:8080/api/ws/rooms/ROOM_ID \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+### Get All Rooms
+
+```bash
+curl http://localhost:8080/api/ws/rooms \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### WebSocket Message Types
+
+- **join**: User joined a room
+- **leave**: User left a room
+- **chat**: Chat message
+- **game_event**: Game-specific events
+- **room_created**: New room created (broadcast to lobby)
+- **room_closed**: Room closed by admin
+- **invite**: User invited to a room
+- **error**: Error message
+
+### Use Cases
+
+1. **Queue System**: 
+   - Users join the public lobby
+   - Admin creates game rooms when enough players are ready
+   - Admin invites specific players to game rooms
+
+2. **Game Rooms**:
+   - Dynamic room creation with player limits
+   - Room-based communication
+   - Automatic room cleanup when game ends
+
+3. **Chat System**:
+   - Public lobby for general chat
+   - Private game rooms for team communication
 
 ## 📊 Monitoring with Grafana Cloud (Optional)
 

@@ -10,6 +10,8 @@ github.com/OkanUysal/go-response v1.0.0 h1:OVb1xAr1j2K/g2xF6dHyGT70WO4CvH8/UdGxT
 github.com/OkanUysal/go-response v1.0.0/go.mod h1:wIewr8dgchhlCRaJlFz4pDC09FxIHuHU5LN8fqCmTnc=
 github.com/OkanUysal/go-swagger v1.1.4 h1:nHxeSHK0bp+bwIAxdWSLC+FS5ESQItzCRF6/OcCOsN8=
 github.com/OkanUysal/go-swagger v1.1.4/go.mod h1:HhhMdJUHmnKvxsaPOFHOYnoExt1yHs1L6t1LcGpa+PA=
+github.com/OkanUysal/go-websocket v1.0.5 h1:d+glJXJeTQaPdnP5UrsJbV3PtmRD9oCyvbCmfBxpkoo=
+github.com/OkanUysal/go-websocket v1.0.5/go.mod h1:mo0tYyaEVxde9UgbEdEZUFfOBnCl5TLza7JUtl8ajD4=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
@@ -88,6 +90,8 @@ github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 h1:JeSE6pjso5THxAzdVpqr6/geYxZytqFMBCOtn/ujyeo=
+github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674/go.mod h1:r4w70xmWCQKmi1ONH4KIaBptdivuRPyosB9RmPlGEwA=
 github.com/grafana/regexp v0.0.0-20250905093917-f7b3be9d1853 h1:cLN4IBkmkYZNnk7EAJ0BHIethd+J6LqxFNw5mSiI2bM=
 github.com/grafana/regexp v0.0.0-20250905093917-f7b3be9d1853/go.mod h1:+JKpmjMGhpgPL+rXZ5nsZieVzvarn86asRlBg4uNGnk=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=

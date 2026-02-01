@@ -6,6 +6,7 @@ import (
 	"github.com/OkanUysal/go-starter-example-project/auth"
 	"github.com/OkanUysal/go-starter-example-project/config"
 	"github.com/OkanUysal/go-starter-example-project/handlers"
+	"github.com/OkanUysal/go-starter-example-project/websocket"
 	"github.com/OkanUysal/go-swagger"
 	"github.com/gin-gonic/gin"
 
@@ -69,6 +70,11 @@ func main() {
 	}
 	log.Info("Auth service initialized successfully")
 
+	// Initialize and start WebSocket room manager
+	roomManager := websocket.GetRoomManager()
+	roomManager.Start()
+	log.Info("WebSocket room manager initialized")
+
 	// Initialize metrics
 	metricsConfig := &metrics.Config{
 		ServiceName: config.GetEnv("SERVICE_NAME", "go-starter-example-project"),
@@ -77,6 +83,9 @@ func main() {
 
 	// Create Gin router
 	r := gin.Default()
+
+	// Serve static files
+	r.Static("/static", "./static")
 
 	// Setup metrics endpoints (/metrics and /health)
 	metricsInstance.Setup(r)
@@ -115,6 +124,27 @@ func main() {
 		{
 			adminGroup.GET("/dashboard", handlers.AdminDashboard)
 			adminGroup.GET("/users", handlers.ListUsers)
+		}
+
+		// WebSocket routes
+		wsGroup := api.Group("/ws")
+		wsGroup.Use(auth.Middleware()) // All WebSocket routes require authentication
+		{
+			// WebSocket connection endpoint
+			wsGroup.GET("", websocket.WebSocketConnect)
+
+			// Room management endpoints
+			wsGroup.GET("/rooms", websocket.GetRooms)
+			wsGroup.GET("/rooms/:room_id", websocket.GetRoomInfo)
+
+			// Admin-only WebSocket endpoints
+			wsAdminGroup := wsGroup.Group("")
+			wsAdminGroup.Use(auth.AdminMiddleware())
+			{
+				wsAdminGroup.POST("/rooms", websocket.CreateRoom)
+				wsAdminGroup.DELETE("/rooms/:room_id", websocket.CloseRoom)
+				wsAdminGroup.POST("/invite", websocket.InviteToRoom)
+			}
 		}
 	}
 
