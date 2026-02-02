@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/OkanUysal/go-logger"
@@ -69,6 +70,15 @@ func WebSocketConnect(c *gin.Context) {
 	// After connection is established, automatically join the requested room
 	// We'll do this via a goroutine to avoid blocking
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				config.Logger.Error("Panic in auto-join",
+					logger.String("error", fmt.Sprint(r)),
+					logger.String("user_id", userID),
+					logger.String("room_id", roomID))
+			}
+		}()
+
 		time.Sleep(100 * time.Millisecond) // Give connection time to establish
 		if joinErr := manager.JoinRoom(roomID, userID, username); joinErr != nil {
 			config.Logger.Error("Failed to auto-join room after connection",

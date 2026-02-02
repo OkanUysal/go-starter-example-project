@@ -10,8 +10,8 @@ github.com/OkanUysal/go-response v1.0.0 h1:OVb1xAr1j2K/g2xF6dHyGT70WO4CvH8/UdGxT
 github.com/OkanUysal/go-response v1.0.0/go.mod h1:wIewr8dgchhlCRaJlFz4pDC09FxIHuHU5LN8fqCmTnc=
 github.com/OkanUysal/go-swagger v1.1.4 h1:nHxeSHK0bp+bwIAxdWSLC+FS5ESQItzCRF6/OcCOsN8=
 github.com/OkanUysal/go-swagger v1.1.4/go.mod h1:HhhMdJUHmnKvxsaPOFHOYnoExt1yHs1L6t1LcGpa+PA=
-github.com/OkanUysal/go-websocket v1.0.5 h1:d+glJXJeTQaPdnP5UrsJbV3PtmRD9oCyvbCmfBxpkoo=
-github.com/OkanUysal/go-websocket v1.0.5/go.mod h1:mo0tYyaEVxde9UgbEdEZUFfOBnCl5TLza7JUtl8ajD4=
+github.com/OkanUysal/go-websocket v1.0.6 h1:JvoWZJZkmIQE97HaT69E6goARE97xIAIoqBqZcml90E=
+github.com/OkanUysal/go-websocket v1.0.6/go.mod h1:mo0tYyaEVxde9UgbEdEZUFfOBnCl5TLza7JUtl8ajD4=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=

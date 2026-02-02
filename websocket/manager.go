@@ -375,6 +375,41 @@ func (rm *RoomManager) handleMessage(client *gowebsocket.Client, msg gowebsocket
 	data := msg.Data
 
 	switch msg.Type {
+	case "join":
+		// Handle room join request
+		roomID, _ := data["room_id"].(string)
+		if roomID == "" {
+			rm.SendToClient(client.UserID, &Message{
+				Type: MessageTypeError,
+				Data: map[string]interface{}{
+					"message": "Room ID is required",
+				},
+			})
+			return
+		}
+
+		// Get username
+		username := client.UserID
+		rm.mu.RLock()
+		for _, room := range rm.rooms {
+			if user, exists := room.Users[client.UserID]; exists {
+				username = user.Username
+				break
+			}
+		}
+		rm.mu.RUnlock()
+
+		// Join the room
+		if err := rm.JoinRoom(roomID, client.UserID, username); err != nil {
+			rm.SendToClient(client.UserID, &Message{
+				Type: MessageTypeError,
+				Data: map[string]interface{}{
+					"message": err.Error(),
+				},
+			})
+			return
+		}
+
 	case "chat":
 		// Handle chat message
 		roomID, _ := data["room_id"].(string)
@@ -443,6 +478,15 @@ func (rm *RoomManager) handleMessage(client *gowebsocket.Client, msg gowebsocket
 
 		// Notify about room creation
 		rm.BroadcastToRoom(LobbyRoomID, &Message{
+			Type: MessageTypeRoomCreated,
+			Data: map[string]interface{}{
+				"room_id": room.ID,
+				"name":    room.Name,
+			},
+		})
+
+		// Also send to creator so they can auto-join
+		rm.SendToClient(client.UserID, &Message{
 			Type: MessageTypeRoomCreated,
 			Data: map[string]interface{}{
 				"room_id": room.ID,

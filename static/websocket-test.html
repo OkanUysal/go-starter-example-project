@@ -324,6 +324,38 @@
         let userId = null;
         let token = null;
 
+        // Load available rooms on page load
+        async function loadRooms() {
+            const token = document.getElementById('token').value;
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/ws/rooms', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const roomsList = document.getElementById('roomsList');
+                    
+                    // Clear current list except lobby
+                    const items = roomsList.querySelectorAll('.room-item:not(:first-child)');
+                    items.forEach(item => item.remove());
+                    
+                    // Add rooms from API (skip lobby as it's already in HTML)
+                    result.data.rooms.forEach(room => {
+                        if (room.id !== 'lobby') {
+                            addRoomToList(room.id, room.name, room.type);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load rooms:', error);
+            }
+        }
+
         function connect() {
             const roomId = document.getElementById('roomId').value || 'lobby';
             token = document.getElementById('token').value;
@@ -338,6 +370,8 @@
                 return;
             }
             
+            // Load rooms before connecting
+            loadRooms();
             // Build WebSocket URL
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/api/ws?room_id=${roomId}&token=${token}`;
@@ -443,8 +477,8 @@
                     break;
                 
                 case 'room_created':
-                    addMessage('system', `🏠 Room created: ${data.room_id}`);
-                    addRoomToList(data.room_id);
+                    addMessage('system', `🏠 Room created: ${data.name || data.room_id}`);
+                    addRoomToList(data.room_id, data.name, 'game');
                     break;
                 
                 case 'room_closed':
@@ -493,25 +527,47 @@
         }
 
         function switchRoom(roomId) {
-            if (ws) {
-                disconnect();
-            }
-            document.getElementById('roomId').value = roomId;
             currentRoom = roomId;
+            document.getElementById('currentRoom').textContent = roomId;
             
             // Update active room in list
             document.querySelectorAll('.room-item').forEach(item => {
                 item.classList.remove('active');
             });
-            event.target.classList.add('active');
+            
+            // Find and activate the clicked room
+            const roomItems = document.querySelectorAll('.room-item');
+            roomItems.forEach(item => {
+                if (item.getAttribute('data-room-id') === roomId || 
+                    (roomId === 'lobby' && item.textContent.includes('Lobby'))) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Send join message if already connected
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const msg = {
+                    type: 'join',
+                    data: {
+                        room_id: roomId
+                    }
+                };
+                ws.send(JSON.stringify(msg));
+                addMessage('system', `Switching to ${roomId}...`);
+            }
         }
 
-        function addRoomToList(roomId) {
+        function addRoomToList(roomId, roomName, roomType) {
             const roomsList = document.getElementById('roomsList');
             const roomItem = document.createElement('div');
             roomItem.className = 'room-item';
             roomItem.onclick = () => switchRoom(roomId);
-            roomItem.textContent = `🎮 ${roomId}`;
+            
+            const icon = roomType === 'lobby' ? '🏛️' : '🎮';
+            const displayName = roomName || roomId;
+            roomItem.textContent = `${icon} ${displayName}`;
+            roomItem.setAttribute('data-room-id', roomId);
+            
             roomsList.appendChild(roomItem);
         }
 
@@ -519,7 +575,7 @@
             const roomsList = document.getElementById('roomsList');
             const items = roomsList.querySelectorAll('.room-item');
             items.forEach(item => {
-                if (item.textContent.includes(roomId)) {
+                if (item.getAttribute('data-room-id') === roomId) {
                     item.remove();
                 }
             });

@@ -10,7 +10,7 @@ require (
 	github.com/OkanUysal/go-metrics v1.3.0
 	github.com/OkanUysal/go-response v1.0.0
 	github.com/OkanUysal/go-swagger v1.1.4
-	github.com/OkanUysal/go-websocket v1.0.5
+	github.com/OkanUysal/go-websocket v1.0.6
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
