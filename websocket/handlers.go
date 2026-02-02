@@ -40,7 +40,10 @@ func WebSocketConnect(c *gin.Context) {
 	username := userID // Default to userID
 	authService := auth.NewService()
 	if user, err := authService.GetUserByID(userID); err == nil {
-		if user.GuestID != nil {
+		// Use display_name if available, otherwise fallback to guest ID
+		if user.DisplayName != "" {
+			username = user.DisplayName
+		} else if user.GuestID != nil {
 			username = "Guest_" + (*user.GuestID)[:8]
 		}
 	}

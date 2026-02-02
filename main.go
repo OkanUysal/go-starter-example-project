@@ -39,7 +39,7 @@ import (
 func main() {
 	// Load environment variables
 	config.LoadEnv()
-	
+
 	// Load configuration and feature flags
 	config.LoadConfig()
 

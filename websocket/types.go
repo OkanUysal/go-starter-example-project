@@ -69,7 +69,7 @@ type RoomInfo struct {
 	PlayerCount  int                  `json:"player_count"`
 	MaxPlayers   int                  `json:"max_players,omitempty"`
 	IsActive     bool                 `json:"is_active"`
-	Users        map[string]*UserInfo `json:"users,omitempty"`   // Track users in room
+	Users        map[string]*UserInfo `json:"users,omitempty"`         // Track users in room
 	AllowedUsers map[string]bool      `json:"allowed_users,omitempty"` // Authorized users (if room auth enabled)
 }
 

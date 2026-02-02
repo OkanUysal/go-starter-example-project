@@ -99,7 +99,7 @@ func (rm *RoomManager) CreateRoom(name, createdBy string, maxPlayers int) (*Room
 		Users:        make(map[string]*UserInfo),
 		AllowedUsers: make(map[string]bool),
 	}
-	
+
 	// If room auth is enabled, creator is automatically allowed
 	if config.RoomAuthEnabled {
 		room.AllowedUsers[createdBy] = true
@@ -243,7 +243,7 @@ func (rm *RoomManager) JoinRoom(roomID, userID, username string) error {
 	if !room.IsActive {
 		return fmt.Errorf("room is not active")
 	}
-	
+
 	// Check authorization for game rooms if feature is enabled
 	if config.RoomAuthEnabled && room.Type == RoomTypeGame {
 		if !room.AllowedUsers[userID] {
