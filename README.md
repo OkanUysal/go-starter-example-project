@@ -437,6 +437,191 @@ DROP TABLE ...;
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## 🎯 Creating a New Project from This Template
+
+When starting a new project based on this template, follow these steps:
+
+### Option 1: Automated Setup (Recommended)
+
+**Step 1: Copy the project to a new location**
+```powershell
+# Windows
+Copy-Item -Recurse go-starter-example-project C:\Projects\my-awesome-project
+cd C:\Projects\my-awesome-project
+
+# Linux/Mac
+cp -r go-starter-example-project ~/projects/my-awesome-project
+cd ~/projects/my-awesome-project
+```
+
+**Step 2: Run the setup script**
+```powershell
+.\setup-new-project.ps1 -ProjectName "my-awesome-project" -ModulePath "github.com/yourusername/my-awesome-project"
+```
+
+The script will ask for confirmation and then automatically:
+- Update `go.mod` with your new module path
+- Replace all import paths in Go files
+- Update migration files with your table names (e.g., `example_user` → `myawesomeproject_user`)
+- Update Swagger documentation
+- Configure `.env` files with your project name
+- Update README with your project details
+- Run `go mod tidy`
+
+**Step 3: Update environment variables**
+Edit `.env` file with your actual values (see Step 5 below)
+
+**Step 4: Done!**
+Your project is ready to customize and extend.
+
+### Option 2: Manual Setup
+
+If you prefer manual setup, follow these steps:
+
+#### 1. Copy the Project
+```bash
+# Windows
+Copy-Item -Recurse go-starter-example-project C:\Projects\your-new-project
+cd C:\Projects\your-new-project
+
+# Linux/Mac
+cp -r go-starter-example-project your-new-project
+cd your-new-project
+```
+
+#### 2. Update Go Module Name
+Edit `go.mod`:
+```go
+module github.com/yourusername/your-new-project
+
+go 1.24
+// ... rest of the file
+```
+
+#### 3. Update All Import Paths
+Replace all occurrences of `github.com/OkanUysal/go-starter-example-project` with your new module path:
+
+**Files to update:**
+- `main.go`
+- `handlers/*.go`
+- `auth/*.go`
+- `config/*.go`
+- `websocket/*.go`
+- `models/*.go`
+
+**Find and replace:**
+```bash
+# Linux/Mac
+find . -type f -name "*.go" -exec sed -i 's|github.com/OkanUysal/go-starter-example-project|github.com/yourusername/your-new-project|g' {} +
+
+# Windows PowerShell
+Get-ChildItem -Recurse -Filter *.go | ForEach-Object {
+    (Get-Content $_.FullName) -replace 'github.com/OkanUysal/go-starter-example-project', 'github.com/yourusername/your-new-project' | Set-Content $_.FullName
+}
+```
+
+#### 4. Update Swagger Documentation
+Edit the `@title` and `@description` in `main.go`:
+```go
+// @title           Your New Project API
+// @version         1.0.0
+// @description     Your project description here
+```
+
+Then regenerate Swagger docs:
+```bash
+swag init
+```
+
+#### 5. Update Environment Variables
+Copy and customize `.env.example`:
+```bash
+cp .env.example .env
+```
+
+Update these values:
+- `DATABASE_URL_LOCAL` - Your database connection
+- `JWT_SECRET` - Generate a new secret: `openssl rand -base64 32`
+- `SERVICE_NAME` - Your new project name
+- `USER_TABLE` - Your user table name (e.g., `your_project_user`)
+- `TOKEN_BLACKLIST_TABLE` - Your blacklist table name (e.g., `your_project_token_blacklist`)
+
+#### 6. Update Database Table Names
+The project uses environment-based table names to avoid conflicts:
+
+**Default tables:**
+- `example_user`
+- `example_token_blacklist`
+
+**Change to your project-specific names:**
+```bash
+USER_TABLE=myapp_user
+TOKEN_BLACKLIST_TABLE=myapp_token_blacklist
+```
+
+#### 7. Run Database Migrations
+```bash
+# Install go-migrate if you haven't
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+# Run migrations
+migrate -path migrations -database "postgresql://user:pass@localhost:5432/dbname?sslmode=disable" up
+```
+
+#### 8. Clean Up Git History
+```bash
+rm -rf .git
+git init
+git add .
+git commit -m "Initial commit: Project based on go-starter-example-project"
+```
+
+#### 9. Verify Everything Works
+```bash
+# Install dependencies
+go mod tidy
+
+# Run the server
+go run main.go
+
+# Test endpoints
+curl http://localhost:8080/health
+curl http://localhost:8080/metrics
+```
+
+#### 10. Customize Further
+
+Now you're ready to build your application:
+- Add new models in `models/`
+- Create handlers in `handlers/`
+- Add business logic in service files
+- Extend WebSocket functionality in `websocket/`
+- Add new migrations as needed
+
+### 🎨 Recommended Customizations
+
+**For Your Specific Use Case:**
+1. **Remove unused features** - If you don't need WebSocket, remove the `websocket/` package
+2. **Add new middleware** - CORS, rate limiting, request ID tracking
+3. **Extend authentication** - Add OAuth providers, email/password login
+4. **Custom business logic** - Add domain-specific services and repositories
+5. **Enhanced monitoring** - Add custom Prometheus metrics for your features
+
+**Project Structure Best Practices:**
+```
+your-new-project/
+├── cmd/                    # Multiple entry points (optional)
+├── internal/              # Private application code
+│   ├── domain/           # Business logic and entities
+│   ├── repository/       # Data access layer
+│   └── service/          # Business services
+├── pkg/                   # Public libraries (optional)
+├── api/                   # API-specific code
+│   ├── handlers/         # HTTP handlers
+│   └── middleware/       # Middleware
+└── migrations/           # Database migrations
+```
+
 ## 📝 License
 
 MIT License - feel free to use this project for your own purposes.
