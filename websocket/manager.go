@@ -11,11 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const (
-	// LobbyRoomID is the ID for the public lobby
-	LobbyRoomID = "lobby"
-)
-
 // RoomManager manages all WebSocket rooms
 type RoomManager struct {
 	hub   *gowebsocket.Hub
