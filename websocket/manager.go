@@ -94,14 +94,20 @@ func (rm *RoomManager) CreateRoom(name, createdBy string, maxPlayers int) (*Room
 	roomID := uuid.New().String()
 
 	room := &RoomInfo{
-		ID:         roomID,
-		Type:       RoomTypeGame,
-		Name:       name,
-		CreatedBy:  createdBy,
-		CreatedAt:  time.Now(),
-		MaxPlayers: maxPlayers,
-		IsActive:   true,
-		Users:      make(map[string]*UserInfo),
+		ID:           roomID,
+		Type:         RoomTypeGame,
+		Name:         name,
+		CreatedBy:    createdBy,
+		CreatedAt:    time.Now(),
+		MaxPlayers:   maxPlayers,
+		IsActive:     true,
+		Users:        make(map[string]*UserInfo),
+		AllowedUsers: make(map[string]bool),
+	}
+	
+	// If room auth is enabled, creator is automatically allowed
+	if config.RoomAuthEnabled {
+		room.AllowedUsers[createdBy] = true
 	}
 
 	rm.rooms[roomID] = room
@@ -170,6 +176,32 @@ func (rm *RoomManager) CloseRoom(roomID string) error {
 	return nil
 }
 
+// InviteToRoom grants users permission to join a room (admin only)
+func (rm *RoomManager) InviteToRoom(roomID string, userIDs []string) error {
+	rm.mu.Lock()
+	defer rm.mu.Unlock()
+
+	room, exists := rm.rooms[roomID]
+	if !exists {
+		return fmt.Errorf("room not found")
+	}
+
+	if !room.IsActive {
+		return fmt.Errorf("room is not active")
+	}
+
+	// Add users to allowed list
+	for _, userID := range userIDs {
+		room.AllowedUsers[userID] = true
+	}
+
+	config.Logger.Info("Users invited to room",
+		logger.String("room_id", roomID),
+		logger.Int("user_count", len(userIDs)))
+
+	return nil
+}
+
 // GetRoom returns room information
 func (rm *RoomManager) GetRoom(roomID string) (*RoomInfo, error) {
 	rm.mu.RLock()
@@ -215,6 +247,13 @@ func (rm *RoomManager) JoinRoom(roomID, userID, username string) error {
 
 	if !room.IsActive {
 		return fmt.Errorf("room is not active")
+	}
+	
+	// Check authorization for game rooms if feature is enabled
+	if config.RoomAuthEnabled && room.Type == RoomTypeGame {
+		if !room.AllowedUsers[userID] {
+			return fmt.Errorf("you are not authorized to join this room")
+		}
 	}
 
 	// Check max players for game rooms

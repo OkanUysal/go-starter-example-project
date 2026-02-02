@@ -243,7 +243,13 @@ func InviteToRoom(c *gin.Context) {
 	// Check if room exists
 	room, err := manager.GetRoom(req.RoomID)
 	if err != nil {
-		response.Error(c, 404, "Room not found", nil)
+		response.Error(c, 404, "Room not found", err)
+		return
+	}
+
+	// Grant permission to join (if room auth is enabled)
+	if err := manager.InviteToRoom(req.RoomID, req.UserIDs); err != nil {
+		response.Error(c, 500, "Failed to invite users", err)
 		return
 	}
 

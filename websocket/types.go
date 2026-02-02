@@ -13,6 +13,12 @@ const (
 	RoomTypeGame RoomType = "game"
 )
 
+// Room authorization constants
+const (
+	// LobbyRoomID is the fixed ID for the public lobby
+	LobbyRoomID = "lobby"
+)
+
 // MessageType defines the type of message
 type MessageType string
 
@@ -55,15 +61,16 @@ type Message struct {
 
 // RoomInfo represents room information
 type RoomInfo struct {
-	ID          string               `json:"id"`
-	Type        RoomType             `json:"type"`
-	Name        string               `json:"name"`
-	CreatedBy   string               `json:"created_by,omitempty"`
-	CreatedAt   time.Time            `json:"created_at"`
-	PlayerCount int                  `json:"player_count"`
-	MaxPlayers  int                  `json:"max_players,omitempty"`
-	IsActive    bool                 `json:"is_active"`
-	Users       map[string]*UserInfo `json:"users,omitempty"` // Track users in room
+	ID           string               `json:"id"`
+	Type         RoomType             `json:"type"`
+	Name         string               `json:"name"`
+	CreatedBy    string               `json:"created_by,omitempty"`
+	CreatedAt    time.Time            `json:"created_at"`
+	PlayerCount  int                  `json:"player_count"`
+	MaxPlayers   int                  `json:"max_players,omitempty"`
+	IsActive     bool                 `json:"is_active"`
+	Users        map[string]*UserInfo `json:"users,omitempty"`   // Track users in room
+	AllowedUsers map[string]bool      `json:"allowed_users,omitempty"` // Authorized users (if room auth enabled)
 }
 
 // UserInfo represents user information in a room
