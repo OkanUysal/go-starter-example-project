@@ -47,6 +47,24 @@ A production-ready Go REST API starter template with authentication, authorizati
 
 ## 🚀 Quick Start
 
+### Creating a New Project
+
+You can use the included PowerShell script to create a new project based on this template:
+
+```powershell
+# Run from the parent directory of this repository
+.\go-starter-example-project\create-new-project.ps1 -ProjectName "my-new-api" -ModulePath "github.com/username/my-new-api"
+```
+
+This will:
+- Create a new project directory
+- Copy all template files
+- Update module paths and references
+- Initialize git repository
+- Set up a fresh project ready for development
+
+### Manual Installation
+
 ### Prerequisites
 - Go 1.21+
 - PostgreSQL database
